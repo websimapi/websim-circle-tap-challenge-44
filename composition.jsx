@@ -1,150 +1,121 @@
 import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
-import React, { useMemo, useRef, useEffect } from "react";
+import React from "react";
 import { AbsoluteFill, useCurrentFrame, interpolate, Audio, Img, spring, useVideoConfig, Sequence } from "remotion";
-import { ThreeCanvas, useThree } from "@remotion/three";
 import * as THREE from "three";
-const Starfield = () => {
-  const frame = useCurrentFrame();
-  const { camera } = useThree();
-  const starPointsRef = useRef(null);
-  const { starVertices, starVelocities, starSizes } = useMemo(() => {
+const StarfieldBackground = () => {
+  const canvasRef = React.useRef(null);
+  const sceneRef = React.useRef(null);
+  const cameraRef = React.useRef(null);
+  const rendererRef = React.useRef(null);
+  const starsRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!canvasRef.current) return;
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+    const camera = new THREE.PerspectiveCamera(60, 540 / 960, 1, 1e3);
+    camera.position.z = 1;
+    cameraRef.current = camera;
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setSize(540, 960);
+    renderer.setPixelRatio(1);
+    renderer.setClearColor(1710638, 1);
+    rendererRef.current = renderer;
     const starCount = 8e3;
-    const starVertices2 = [];
-    const starVelocities2 = [];
-    const starSizes2 = [];
+    const starVertices = [];
+    const starVelocities = [];
+    const starSizes = [];
     for (let i = 0; i < starCount; i++) {
       const x = (Math.random() - 0.5) * 2e3;
       const y = (Math.random() - 0.5) * 2e3;
       const z = Math.random() * -2e3;
-      starVertices2.push(x, y, z);
-      starVelocities2.push(0, 0, 0.5 + Math.random() * 1);
-      starSizes2.push(1 + Math.random() * 2);
+      starVertices.push(x, y, z);
+      starVelocities.push(0, 0, 0.5 + Math.random() * 1);
+      starSizes.push(1 + Math.random() * 2);
     }
-    return { starVertices: starVertices2, starVelocities: starVelocities2, starSizes: starSizes2 };
+    const starGeometry = new THREE.BufferGeometry();
+    starGeometry.setAttribute("position", new THREE.Float32BufferAttribute(starVertices, 3));
+    starGeometry.setAttribute("velocity", new THREE.Float32BufferAttribute(starVelocities, 3));
+    starGeometry.setAttribute("size", new THREE.Float32BufferAttribute(starSizes, 1));
+    const starMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        color: { value: new THREE.Color(16777215) }
+      },
+      vertexShader: `
+                attribute float size;
+                attribute vec3 velocity;
+                varying float vAlpha;
+                void main() {
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_PointSize = size * (300.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                    vAlpha = 1.0 - (abs(position.z) / 1000.0);
+                }
+            `,
+      fragmentShader: `
+                uniform vec3 color;
+                varying float vAlpha;
+                void main() {
+                    float r = 0.0, delta = 0.0, alpha = 1.0;
+                    vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+                    r = dot(cxy, cxy);
+                    if (r > 1.0) {
+                        discard;
+                    }
+                    gl_FragColor = vec4(color, vAlpha * (1.0 - r));
+                }
+            `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthTest: false
+    });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+    starsRef.current = stars;
+    return () => {
+      starGeometry.dispose();
+      starMaterial.dispose();
+      renderer.dispose();
+    };
   }, []);
-  useEffect(() => {
-    if (starPointsRef.current) {
-      const positions = starPointsRef.current.geometry.attributes.position.array;
-      const travelDistance = 2e3 + camera.position.z;
-      for (let i = 0; i < positions.length; i += 3) {
-        const initialZ = starVertices[i + 2];
-        const velocityZ = starVelocities[i + 2];
-        const zOffset = velocityZ * frame;
-        positions[i + 2] = (initialZ + zOffset + 2e3) % travelDistance - 2e3;
+  const frame = useCurrentFrame();
+  React.useEffect(() => {
+    if (!starsRef.current || !rendererRef.current || !sceneRef.current || !cameraRef.current) return;
+    const stars = starsRef.current;
+    const positions = stars.geometry.attributes.position.array;
+    const velocities = stars.geometry.attributes.velocity.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i + 2] += velocities[i + 2];
+      if (positions[i + 2] > cameraRef.current.position.z) {
+        positions[i] = (Math.random() - 0.5) * 2e3;
+        positions[i + 1] = (Math.random() - 0.5) * 2e3;
+        positions[i + 2] = -2e3;
       }
-      starPointsRef.current.geometry.attributes.position.needsUpdate = true;
     }
-  });
-  return /* @__PURE__ */ jsxDEV("points", { ref: starPointsRef, children: [
-    /* @__PURE__ */ jsxDEV("bufferGeometry", { children: [
-      /* @__PURE__ */ jsxDEV(
-        "float32BufferAttribute",
-        {
-          attach: "attributes-position",
-          count: starVertices.length / 3,
-          array: new Float32Array(starVertices),
-          itemSize: 3
-        },
-        void 0,
-        false,
-        {
-          fileName: "<stdin>",
-          lineNumber: 47,
-          columnNumber: 17
-        }
-      ),
-      /* @__PURE__ */ jsxDEV(
-        "float32BufferAttribute",
-        {
-          attach: "attributes-size",
-          count: starSizes.length,
-          array: new Float32Array(starSizes),
-          itemSize: 1
-        },
-        void 0,
-        false,
-        {
-          fileName: "<stdin>",
-          lineNumber: 53,
-          columnNumber: 17
-        }
-      )
-    ] }, void 0, true, {
-      fileName: "<stdin>",
-      lineNumber: 46,
-      columnNumber: 13
-    }),
-    /* @__PURE__ */ jsxDEV(
-      "shaderMaterial",
-      {
-        blending: THREE.AdditiveBlending,
-        depthTest: false,
-        transparent: true,
-        vertexShader: `
-                    attribute float size;
-                    varying float vAlpha;
-                    void main() {
-                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                        gl_PointSize = size * (300.0 / -mvPosition.z);
-                        gl_Position = projectionMatrix * mvPosition;
-                        vAlpha = 1.0 - (abs(position.z) / 1000.0);
-                    }
-                `,
-        fragmentShader: `
-                    uniform vec3 color;
-                    varying float vAlpha;
-                    void main() {
-                        float r = 0.0, delta = 0.0, alpha = 1.0;
-                        vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-                        r = dot(cxy, cxy);
-                        if (r > 1.0) {
-                            discard;
-                        }
-                        gl_FragColor = vec4(color, vAlpha * (1.0 - r));
-                    }
-                `,
-        uniforms: { color: { value: new THREE.Color(16777215) } }
-      },
-      void 0,
-      false,
-      {
-        fileName: "<stdin>",
-        lineNumber: 60,
-        columnNumber: 13
-      }
-    )
-  ] }, void 0, true, {
-    fileName: "<stdin>",
-    lineNumber: 45,
-    columnNumber: 9
-  });
-};
-const StarfieldBackground = () => {
+    stars.geometry.attributes.position.needsUpdate = true;
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  }, [frame]);
   return /* @__PURE__ */ jsxDEV(
-    ThreeCanvas,
+    "canvas",
     {
-      linear: true,
-      gl: {
-        antialias: true
-      },
-      camera: {
-        fov: 60,
-        position: [0, 0, 1],
-        near: 1,
-        far: 1e3
-      },
-      style: { backgroundColor: "#1a1a2e" },
-      children: /* @__PURE__ */ jsxDEV(Starfield, {}, void 0, false, {
-        fileName: "<stdin>",
-        lineNumber: 108,
-        columnNumber: 13
-      })
+      ref: canvasRef,
+      style: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0
+      }
     },
     void 0,
     false,
     {
       fileName: "<stdin>",
-      lineNumber: 95,
+      lineNumber: 122,
       columnNumber: 9
     }
   );
@@ -167,73 +138,73 @@ const Visualizer = ({ pulseAmount, targetColor, radius, lineWidth }) => {
       /* @__PURE__ */ jsxDEV("radialGradient", { id: outerGradientId, cx: "0", cy: "0", r: pulseOuterRadius, gradientUnits: "userSpaceOnUse", children: [
         /* @__PURE__ */ jsxDEV("stop", { offset: 0, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 136,
+          lineNumber: 159,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${outerRadius / pulseOuterRadius * 0.8}`, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 137,
+          lineNumber: 160,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${outerRadius / pulseOuterRadius * 0.95}`, stopColor: pulseColorRgba }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 138,
+          lineNumber: 161,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: "1", stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 139,
+          lineNumber: 162,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 135,
+        lineNumber: 158,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("radialGradient", { id: innerGradientId, cx: "0", cy: "0", r: innerRadius, gradientUnits: "userSpaceOnUse", children: [
         /* @__PURE__ */ jsxDEV("stop", { offset: 0, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 142,
+          lineNumber: 165,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${pulseInnerRadius / innerRadius}`, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 143,
+          lineNumber: 166,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${pulseInnerRadius / innerRadius * 1.25}`, stopColor: pulseColorRgba }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 144,
+          lineNumber: 167,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: "1", stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 145,
+          lineNumber: 168,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 141,
+        lineNumber: 164,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 134,
+      lineNumber: 157,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("rect", { x: "-55", y: "-55", width: "110", height: "110", fill: `url(#${outerGradientId})` }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 148,
+      lineNumber: 171,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("rect", { x: "-55", y: "-55", width: "110", height: "110", fill: `url(#${innerGradientId})` }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 149,
+      lineNumber: 172,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 133,
+    lineNumber: 156,
     columnNumber: 9
   });
 };
@@ -246,7 +217,7 @@ const GameCanvas = ({ frameData, config }) => {
   return /* @__PURE__ */ jsxDEV("svg", { viewBox: "-55 -55 110 110", style: { width: "100%", height: "100%" }, children: [
     /* @__PURE__ */ jsxDEV(Visualizer, { pulseAmount, targetColor, radius, lineWidth }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 164,
+      lineNumber: 187,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -264,7 +235,7 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 166,
+        lineNumber: 189,
         columnNumber: 13
       }
     ),
@@ -281,7 +252,7 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 175,
+        lineNumber: 198,
         columnNumber: 17
       }
     ),
@@ -300,17 +271,17 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 185,
+        lineNumber: 208,
         columnNumber: 17
       }
     ) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 184,
+      lineNumber: 207,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 163,
+    lineNumber: 186,
     columnNumber: 9
   });
 };
@@ -337,7 +308,7 @@ const LevelDisplay = ({ level, isVisible }) => {
     zIndex: 1
   }, children: level }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 213,
+    lineNumber: 236,
     columnNumber: 9
   });
 };
@@ -345,7 +316,7 @@ const Avatar = ({ user, prefetchedAvatarUrl }) => {
   if (!prefetchedAvatarUrl) {
     return /* @__PURE__ */ jsxDEV("div", { style: { width: "50px", height: "50px", borderRadius: "50%", backgroundColor: "#4a4a6a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: "bold" }, children: user ? user.username.charAt(0).toUpperCase() : "?" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 231,
+      lineNumber: 254,
       columnNumber: 13
     });
   }
@@ -359,7 +330,7 @@ const Avatar = ({ user, prefetchedAvatarUrl }) => {
     false,
     {
       fileName: "<stdin>",
-      lineNumber: 238,
+      lineNumber: 261,
       columnNumber: 9
     }
   );
@@ -382,38 +353,38 @@ const EndScreenOverlay = ({ score, level, user, isGameOver, prefetchedAvatarUrl 
     user && /* @__PURE__ */ jsxDEV("div", { style: { position: "absolute", top: "20px", left: "20px", display: "flex", alignItems: "center", gap: "10px", transform: `scale(${scaleIn})` }, children: [
       /* @__PURE__ */ jsxDEV(Avatar, { user, prefetchedAvatarUrl }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 268,
+        lineNumber: 291,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("span", { style: { fontSize: "24px", fontWeight: "bold", textShadow: "2px 2px 4px #000" }, children: user.username }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 269,
+        lineNumber: 292,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 267,
+      lineNumber: 290,
       columnNumber: 18
     }),
     /* @__PURE__ */ jsxDEV("div", { style: { position: "absolute", top: "30px", right: "20px", fontSize: "24px", fontWeight: "bold", textShadow: "2px 2px 4px #000", transform: `scale(${scaleIn})`, textAlign: "right" }, children: [
       /* @__PURE__ */ jsxDEV("div", { children: finalScoreText }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 276,
+        lineNumber: 299,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { children: finalLevelText }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 277,
+        lineNumber: 300,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 275,
+      lineNumber: 298,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 264,
+    lineNumber: 287,
     columnNumber: 9
   });
 };
@@ -423,7 +394,7 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
   if (!replayData || !replayData.frames || replayData.frames.length < 2) {
     return /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { backgroundColor: "#1a1a2e", color: "white", justifyContent: "center", alignItems: "center" }, children: "Loading replay..." }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 288,
+      lineNumber: 311,
       columnNumber: 16
     });
   }
@@ -466,10 +437,10 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
       { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
     );
   }
-  return /* @__PURE__ */ jsxDEV(AbsoluteFill, { children: [
+  return /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { backgroundColor: "#1a1a2e" }, children: [
     /* @__PURE__ */ jsxDEV(StarfieldBackground, {}, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 346,
+      lineNumber: 369,
       columnNumber: 13
     }),
     !showEndScreen && /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { top: "5vh", justifyContent: "flex-start", alignItems: "center" }, children: /* @__PURE__ */ jsxDEV("div", { style: { fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: "bold", color: config.colors.fail.trim(), fontFamily: "Arial, sans-serif" }, children: [
@@ -477,46 +448,46 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
       score
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 350,
+      lineNumber: 374,
       columnNumber: 21
     }) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 349,
+      lineNumber: 373,
       columnNumber: 17
     }),
     /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { justifyContent: "center", alignItems: "center" }, children: [
       /* @__PURE__ */ jsxDEV(LevelDisplay, { level, isVisible: !showEndScreen || isDuringEndScreen }, `level-${level}`, false, {
         fileName: "<stdin>",
-        lineNumber: 358,
+        lineNumber: 382,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { style: { width: "90%", height: "auto", aspectRatio: "1 / 1" }, children: /* @__PURE__ */ jsxDEV(GameCanvas, { frameData: currentFrameData, config }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 360,
+        lineNumber: 384,
         columnNumber: 21
       }) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 359,
+        lineNumber: 383,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 357,
+      lineNumber: 381,
       columnNumber: 13
     }),
     showEndScreen && /* @__PURE__ */ jsxDEV(EndScreenOverlay, { score, level, user: currentUser, isGameOver, prefetchedAvatarUrl }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 365,
+      lineNumber: 389,
       columnNumber: 32
     }),
     /* @__PURE__ */ jsxDEV(Audio, { src: "/Infinite Orbit - Track 1 (Extended 2) - Sonauto.ogg", volume: musicVolume, loop: true }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 368,
+      lineNumber: 392,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(Audio, { src: "/start_sound.mp3", volume: 0.5 }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 369,
+      lineNumber: 393,
       columnNumber: 13
     }),
     successFrames.map((f, i) => {
@@ -524,11 +495,11 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
       if (frameForAudio < gameEndFrame) {
         return /* @__PURE__ */ jsxDEV(Sequence, { from: frameForAudio, children: /* @__PURE__ */ jsxDEV(Audio, { src: "/success.mp3" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 377,
+          lineNumber: 401,
           columnNumber: 25
         }) }, `success-${i}`, false, {
           fileName: "<stdin>",
-          lineNumber: 376,
+          lineNumber: 400,
           columnNumber: 22
         });
       }
@@ -536,16 +507,16 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
     }),
     isGameOver && /* @__PURE__ */ jsxDEV(Sequence, { from: gameEndFrame - 1, children: /* @__PURE__ */ jsxDEV(Audio, { src: "/fail.mp3" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 386,
+      lineNumber: 410,
       columnNumber: 21
     }) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 385,
+      lineNumber: 409,
       columnNumber: 17
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 345,
+    lineNumber: 368,
     columnNumber: 9
   });
 };
