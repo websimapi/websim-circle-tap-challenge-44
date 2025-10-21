@@ -88,7 +88,7 @@ const StarfieldBackground = () => {
     const positions = stars.geometry.attributes.position.array;
     const velocities = stars.geometry.attributes.velocity.array;
     for (let i = 0; i < positions.length; i += 3) {
-      positions[i + 2] += velocities[i + 2];
+      positions[i + 2] += velocities[i + 2] * 2;
       if (positions[i + 2] > cameraRef.current.position.z) {
         positions[i] = (Math.random() - 0.5) * 2e3;
         positions[i + 1] = (Math.random() - 0.5) * 2e3;
@@ -115,7 +115,7 @@ const StarfieldBackground = () => {
     false,
     {
       fileName: "<stdin>",
-      lineNumber: 122,
+      lineNumber: 123,
       columnNumber: 9
     }
   );
@@ -138,73 +138,73 @@ const Visualizer = ({ pulseAmount, targetColor, radius, lineWidth }) => {
       /* @__PURE__ */ jsxDEV("radialGradient", { id: outerGradientId, cx: "0", cy: "0", r: pulseOuterRadius, gradientUnits: "userSpaceOnUse", children: [
         /* @__PURE__ */ jsxDEV("stop", { offset: 0, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 159,
+          lineNumber: 160,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${outerRadius / pulseOuterRadius * 0.8}`, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 160,
+          lineNumber: 161,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${outerRadius / pulseOuterRadius * 0.95}`, stopColor: pulseColorRgba }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 161,
+          lineNumber: 162,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: "1", stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 162,
+          lineNumber: 163,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 158,
+        lineNumber: 159,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("radialGradient", { id: innerGradientId, cx: "0", cy: "0", r: innerRadius, gradientUnits: "userSpaceOnUse", children: [
         /* @__PURE__ */ jsxDEV("stop", { offset: 0, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 165,
+          lineNumber: 166,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${pulseInnerRadius / innerRadius}`, stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 166,
+          lineNumber: 167,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: `${pulseInnerRadius / innerRadius * 1.25}`, stopColor: pulseColorRgba }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 167,
+          lineNumber: 168,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("stop", { offset: "1", stopColor: "rgba(0,0,0,0)" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 168,
+          lineNumber: 169,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "<stdin>",
-        lineNumber: 164,
+        lineNumber: 165,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 157,
+      lineNumber: 158,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("rect", { x: "-55", y: "-55", width: "110", height: "110", fill: `url(#${outerGradientId})` }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 171,
+      lineNumber: 172,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("rect", { x: "-55", y: "-55", width: "110", height: "110", fill: `url(#${innerGradientId})` }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 172,
+      lineNumber: 173,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 156,
+    lineNumber: 157,
     columnNumber: 9
   });
 };
@@ -217,7 +217,7 @@ const GameCanvas = ({ frameData, config }) => {
   return /* @__PURE__ */ jsxDEV("svg", { viewBox: "-55 -55 110 110", style: { width: "100%", height: "100%" }, children: [
     /* @__PURE__ */ jsxDEV(Visualizer, { pulseAmount, targetColor, radius, lineWidth }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 187,
+      lineNumber: 188,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -235,7 +235,7 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 189,
+        lineNumber: 190,
         columnNumber: 13
       }
     ),
@@ -252,7 +252,7 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 198,
+        lineNumber: 199,
         columnNumber: 17
       }
     ),
@@ -271,17 +271,17 @@ const GameCanvas = ({ frameData, config }) => {
       false,
       {
         fileName: "<stdin>",
-        lineNumber: 208,
+        lineNumber: 209,
         columnNumber: 17
       }
     ) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 207,
+      lineNumber: 208,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 186,
+    lineNumber: 187,
     columnNumber: 9
   });
 };
@@ -308,7 +308,7 @@ const LevelDisplay = ({ level, isVisible }) => {
     zIndex: 1
   }, children: level }, void 0, false, {
     fileName: "<stdin>",
-    lineNumber: 236,
+    lineNumber: 237,
     columnNumber: 9
   });
 };
@@ -316,7 +316,7 @@ const Avatar = ({ user, prefetchedAvatarUrl }) => {
   if (!prefetchedAvatarUrl) {
     return /* @__PURE__ */ jsxDEV("div", { style: { width: "50px", height: "50px", borderRadius: "50%", backgroundColor: "#4a4a6a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: "bold" }, children: user ? user.username.charAt(0).toUpperCase() : "?" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 254,
+      lineNumber: 255,
       columnNumber: 13
     });
   }
@@ -330,7 +330,7 @@ const Avatar = ({ user, prefetchedAvatarUrl }) => {
     false,
     {
       fileName: "<stdin>",
-      lineNumber: 261,
+      lineNumber: 262,
       columnNumber: 9
     }
   );
@@ -353,38 +353,38 @@ const EndScreenOverlay = ({ score, level, user, isGameOver, prefetchedAvatarUrl 
     user && /* @__PURE__ */ jsxDEV("div", { style: { position: "absolute", top: "20px", left: "20px", display: "flex", alignItems: "center", gap: "10px", transform: `scale(${scaleIn})` }, children: [
       /* @__PURE__ */ jsxDEV(Avatar, { user, prefetchedAvatarUrl }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 291,
+        lineNumber: 292,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("span", { style: { fontSize: "24px", fontWeight: "bold", textShadow: "2px 2px 4px #000" }, children: user.username }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 292,
+        lineNumber: 293,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 290,
+      lineNumber: 291,
       columnNumber: 18
     }),
     /* @__PURE__ */ jsxDEV("div", { style: { position: "absolute", top: "30px", right: "20px", fontSize: "24px", fontWeight: "bold", textShadow: "2px 2px 4px #000", transform: `scale(${scaleIn})`, textAlign: "right" }, children: [
       /* @__PURE__ */ jsxDEV("div", { children: finalScoreText }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 299,
+        lineNumber: 300,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { children: finalLevelText }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 300,
+        lineNumber: 301,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 298,
+      lineNumber: 299,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 287,
+    lineNumber: 288,
     columnNumber: 9
   });
 };
@@ -394,7 +394,7 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
   if (!replayData || !replayData.frames || replayData.frames.length < 2) {
     return /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { backgroundColor: "#1a1a2e", color: "white", justifyContent: "center", alignItems: "center" }, children: "Loading replay..." }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 311,
+      lineNumber: 312,
       columnNumber: 16
     });
   }
@@ -440,7 +440,7 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
   return /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { backgroundColor: "#1a1a2e" }, children: [
     /* @__PURE__ */ jsxDEV(StarfieldBackground, {}, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 369,
+      lineNumber: 370,
       columnNumber: 13
     }),
     !showEndScreen && /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { top: "5vh", justifyContent: "flex-start", alignItems: "center" }, children: /* @__PURE__ */ jsxDEV("div", { style: { fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: "bold", color: config.colors.fail.trim(), fontFamily: "Arial, sans-serif" }, children: [
@@ -448,46 +448,46 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
       score
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 374,
+      lineNumber: 375,
       columnNumber: 21
     }) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 373,
+      lineNumber: 374,
       columnNumber: 17
     }),
     /* @__PURE__ */ jsxDEV(AbsoluteFill, { style: { justifyContent: "center", alignItems: "center" }, children: [
       /* @__PURE__ */ jsxDEV(LevelDisplay, { level, isVisible: !showEndScreen || isDuringEndScreen }, `level-${level}`, false, {
         fileName: "<stdin>",
-        lineNumber: 382,
+        lineNumber: 383,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { style: { width: "90%", height: "auto", aspectRatio: "1 / 1" }, children: /* @__PURE__ */ jsxDEV(GameCanvas, { frameData: currentFrameData, config }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 384,
+        lineNumber: 385,
         columnNumber: 21
       }) }, void 0, false, {
         fileName: "<stdin>",
-        lineNumber: 383,
+        lineNumber: 384,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "<stdin>",
-      lineNumber: 381,
+      lineNumber: 382,
       columnNumber: 13
     }),
     showEndScreen && /* @__PURE__ */ jsxDEV(EndScreenOverlay, { score, level, user: currentUser, isGameOver, prefetchedAvatarUrl }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 389,
+      lineNumber: 390,
       columnNumber: 32
     }),
     /* @__PURE__ */ jsxDEV(Audio, { src: "/Infinite Orbit - Track 1 (Extended 2) - Sonauto.ogg", volume: musicVolume, loop: true }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 392,
+      lineNumber: 393,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(Audio, { src: "/start_sound.mp3", volume: 0.5 }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 393,
+      lineNumber: 394,
       columnNumber: 13
     }),
     successFrames.map((f, i) => {
@@ -495,11 +495,11 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
       if (frameForAudio < gameEndFrame) {
         return /* @__PURE__ */ jsxDEV(Sequence, { from: frameForAudio, children: /* @__PURE__ */ jsxDEV(Audio, { src: "/success.mp3" }, void 0, false, {
           fileName: "<stdin>",
-          lineNumber: 401,
+          lineNumber: 402,
           columnNumber: 25
         }) }, `success-${i}`, false, {
           fileName: "<stdin>",
-          lineNumber: 400,
+          lineNumber: 401,
           columnNumber: 22
         });
       }
@@ -507,16 +507,16 @@ const ReplayComposition = ({ replayData, prefetchedAvatarUrl }) => {
     }),
     isGameOver && /* @__PURE__ */ jsxDEV(Sequence, { from: gameEndFrame - 1, children: /* @__PURE__ */ jsxDEV(Audio, { src: "/fail.mp3" }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 410,
+      lineNumber: 411,
       columnNumber: 21
     }) }, void 0, false, {
       fileName: "<stdin>",
-      lineNumber: 409,
+      lineNumber: 410,
       columnNumber: 17
     })
   ] }, void 0, true, {
     fileName: "<stdin>",
-    lineNumber: 368,
+    lineNumber: 369,
     columnNumber: 9
   });
 };
